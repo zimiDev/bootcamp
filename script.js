@@ -79,6 +79,62 @@ const app = {
             this.goToSection(3); 
         }
     },
+    // script.js ichidagi app ob'ektiga joylang:
+    setupPhoneMask: function() {
+        const phoneInput = document.getElementById('telefon');
+        if (!phoneInput) return;
+
+        const prefix = "+998 ";
+
+        const formatValue = (val) => {
+            // Faqat raqamlarni ajratib olish
+            let nums = val.replace(/\D/g, '');
+            // Agar 998 bilan boshlanmasa, uni qo'shish (tozalash)
+            if (!nums.startsWith('998')) nums = '998' + nums;
+            
+            let formatted = "+998 ";
+            let part = nums.substring(3); // 998 dan keyingi qismi
+
+            if (part.length > 0) formatted += part.substring(0, 2);
+            if (part.length > 2) formatted += " " + part.substring(2, 5);
+            if (part.length > 5) formatted += " " + part.substring(5, 7);
+            if (part.length > 7) formatted += " " + part.substring(7, 9);
+            
+            return formatted.trimEnd();
+        };
+
+        const updateCursor = (el) => {
+            // Kursorni doim oxiriga surib qo'yish (Mobil uchun muhim)
+            setTimeout(() => {
+                const len = el.value.length;
+                el.setSelectionRange(len, len);
+            }, 0);
+        };
+
+        phoneInput.addEventListener('input', function(e) {
+            const startValue = this.value;
+            this.value = formatValue(startValue);
+            updateCursor(this);
+        });
+
+        phoneInput.addEventListener('focus', function() {
+            if (this.value === "") {
+                this.value = prefix;
+                updateCursor(this);
+            }
+        });
+
+        phoneInput.addEventListener('click', function() {
+            updateCursor(this);
+        });
+
+        phoneInput.addEventListener('keydown', function(e) {
+          
+            if (e.key === 'Backspace' && this.value.length <= prefix.length) {
+                e.preventDefault();
+            }
+        });
+    },
 
     startTest: function() {
         this.state.currentQ = 0; this.state.score = 0; this.state.timeLeft = 20 * 60;
@@ -164,3 +220,4 @@ const app = {
 };
 
 window.addEventListener('DOMContentLoaded', () => app.init());
+
