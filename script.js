@@ -118,5 +118,7 @@
                 btn.style.display = 'none'; document.getElementById('successMsg').style.display = 'block';
             }
         };
+
         window.addEventListener('DOMContentLoaded', () => app.init());
         
+
