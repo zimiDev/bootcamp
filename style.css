@@ -1,15 +1,8 @@
-Salom! Siz bergan CSS kodini to'liq tahlil qildim. Asosan kod ishlaydi, lekin bir nechta kamchiliklari bor edi: shriftlar (font) yuklanmagan, `.glitch` klassi uchun animatsiya yetishmayotgan edi, kodlarni o'qish qiyin bo'lganligi sababli formatlash ham kerak edi.
+Tushunarli. Asosiy muammo vaqt jadvali (Roadmap) qismidagi chiziqlarning nuqtalar (aylanalar) bilan mos kelmasligi, shuningdek input qatorlaridagi belgilarning o'rtaga chiqmasligi bo'lgan.
 
-Quyida tuzatilgan, tozalangan va optimallashtirilgan **to'liq CSS** kodi keltirilgan.
+Quyadagi CSS kodida **Timeline** (chiziqlar va aylanalar) qismi qayta yozildi. Endi chiziqlar aniq, aylanalar esa chiziqning o'rtasida mukammal turadi. Shuningdek, boshqa aylanalar (radio buttons) va belgilar ham o'rtaga (center) keltririldi.
 
-**O'zgartirishlar kiritilgan joylar:**
-1.  **Fontlar:** Google Fonts (`Orbitron` va `Share Tech Mono`) qo'shildi.
-2.  **Glitch Animatsiya:** `.glitch` klassi uchun yo'q qilingan `@keyframes` qo'shildi.
-3.  **Scrollbar:** Saytning "Cyber" ko'rinishiga moslashtrish uchun o'zgacha aylana (scrollbar) qo'shildi.
-4.  **Input sozlamalari:** Kiritish qatorlaridagi belgini (`> _`) aniqroq joylashtirish uchun `transform` ishlatildi.
-5.  **Kod bloklari:** Kodlar uchun qulayroq qatlashuv (overflow) sozlandi.
-
-Bu kodni `style.css` fayliga yoki HTML `<style>` tagiga nusxalab olishingiz mumkin.
+Bu to'liq tuzatilgan CSS kodini nusxalab oling:
 
 ```css
 /* =========================================
@@ -102,7 +95,6 @@ body {
 .text-orange { color: var(--color-accent);     text-shadow: 0 0 10px var(--color-accent); }
 .text-red    { color: var(--color-danger);     text-shadow: 0 0 10px var(--color-danger); }
 
-/* Glitch Animation Added */
 @keyframes glitch-anim {
     0% { transform: translate(0); }
     20% { transform: translate(-2px, 2px); }
@@ -164,18 +156,20 @@ h4 { font-size: 1rem; }
 }
 
 .input-wrapper { position: relative; }
+/* Input belgisini aniq o'rtaga qo'yish */
 .input-wrapper::before {
     content: '> _';
     position: absolute; left: 12px; top: 50%;
     transform: translateY(-50%);
     color: var(--color-primary); font-size: 0.9rem; pointer-events: none;
+    z-index: 2;
 }
 
 input, select {
     width: 100%; background-color: #050505;
     border: 1px solid var(--border-color);
     color: #fff; font-family: var(--font-body);
-    padding: 12px 12px 12px 40px;
+    padding: 12px 12px 12px 45px; /* Chap tomondan joy ko'paytirildi */
     font-size: 1rem; outline: none;
     border-radius: 4px; transition: border-color 0.3s;
 }
@@ -206,29 +200,66 @@ input:focus, select:focus {
     display: inline-block; margin-bottom: var(--space-md); border-radius: 20px;
 }
 
-/* Roadmap */
+/* Roadmap - Chiziqlar va Aylanalar tuzatildi */
 .roadmap-title { text-align: center; margin-bottom: var(--space-lg); }
 .timeline-grid {
     display: grid; grid-template-columns: 1fr 1fr;
     gap: var(--space-lg); position: relative; padding: var(--space-md) 0;
 }
-.week-column { position: relative; padding-left: var(--space-lg); border-left: 2px solid var(--border-color); }
-.week-col-1 { border-color: var(--color-primary); box-shadow: -2px 0 15px rgba(0,255,136,0.1); }
-.week-col-2 { border-color: var(--color-secondary); box-shadow: -2px 0 15px rgba(0,212,255,0.1); }
+
+.week-column {
+    position: relative;
+    padding-left: 40px; /* Chap tomondan chiziq uchun joy ajratildi */
+    border: none; /* Eski border olib tashlandi */
+}
+
+/* Chiziq (Line) - Pseudo element orqali aniq joylashtirildi */
+.week-column::before {
+    content: '';
+    position: absolute;
+    left: 19px; /* 40px paddingning o'rtasi */
+    top: 5px;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-color);
+    z-index: 0;
+}
+/* Rangli chiziq effekti */
+.week-col-1::before { background: linear-gradient(180deg, var(--color-primary) 0%, rgba(0,255,136,0.1) 100%); box-shadow: 0 0 10px rgba(0,255,136,0.2); }
+.week-col-2::before { background: linear-gradient(180deg, var(--color-secondary) 0%, rgba(0,212,255,0.1) 100%); box-shadow: 0 0 10px rgba(0,212,255,0.2); }
 
 .day-node {
     background-color: var(--card-bg); border: 1px solid var(--border-color);
     padding: var(--space-md); margin-bottom: var(--space-md);
     position: relative; border-radius: 4px;
+    z-index: 1;
 }
 .day-node:hover { border-color: #fff; transform: translateX(5px); }
+
+/* Aylana (Dot) - Chiziqning ustiga aniq o'rnatildi */
 .day-node::before {
-    content: ''; position: absolute; left: -35px; top: 22px;
-    width: 12px; height: 12px; background: var(--bg-color);
-    border: 2px solid #555; border-radius: 50%;
+    content: '';
+    position: absolute;
+    left: -31px; /* Padding(40) - Left(31) = 19px. Chiziq 19pxda. */
+    top: 24px; /* Karta ichidagi matn balandligiga qarab sozlandi */
+    width: 14px; height: 14px;
+    background: var(--bg-color);
+    border: 2px solid #555;
+    border-radius: 50%;
+    z-index: 2;
+    transition: all 0.3s ease;
 }
-.week-col-1 .day-node::before { border-color: var(--color-primary); box-shadow: 0 0 8px var(--color-primary); }
-.week-col-2 .day-node::before { border-color: var(--color-secondary); box-shadow: 0 0 8px var(--color-secondary); }
+
+/* Rangli aylanalar */
+.week-col-1 .day-node:hover::before { border-color: var(--color-primary); box-shadow: 0 0 10px var(--color-primary); }
+.week-col-2 .day-node:hover::before { border-color: var(--color-secondary); box-shadow: 0 0 10px var(--color-secondary); }
+
+/* Faol (hozirgi) kun uchun markerni o'zingiz qo'shishingiz mumkin, masalan: */
+.day-node.active::before {
+    border-color: #fff;
+    box-shadow: 0 0 15px #fff;
+    background: #fff;
+}
 
 .day-header {
     display: flex; align-items: center;
@@ -329,12 +360,13 @@ input:focus, select:focus {
     max-width: 100%;
 }
 
-/* Options */
+/* Options - Aylanalar (Radio buttons) to'g'irlandi */
 .options-grid { display: grid; gap: var(--space-md); }
 .option-card {
     background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);
     padding: 15px; cursor: pointer; transition: 0.2s;
-    display: flex; align-items: flex-start; border-radius: 4px;
+    display: flex; align-items: center; /* Flex orqali markazlashtirish */
+    border-radius: 4px;
     word-break: break-word;
 }
 .option-card:hover { background: rgba(0, 212, 255, 0.05); border-color: #555; }
@@ -342,14 +374,21 @@ input:focus, select:focus {
     background: rgba(0, 255, 136, 0.1); border-color: var(--color-primary);
     box-shadow: 0 0 10px rgba(0,255,136,0.2) inset;
 }
+
 .radio-custom {
-    width: 18px; height: 18px; border: 2px solid #555; border-radius: 50%;
-    margin-right: 15px; position: relative; flex-shrink: 0; margin-top: 2px;
+    width: 20px; height: 20px; border: 2px solid #555; border-radius: 50%;
+    margin-right: 15px; position: relative; flex-shrink: 0;
+    /* Qo'shimcha: flex yordamida vertikal markazlash */
+    display: flex; align-items: center; justify-content: center;
 }
 .option-card.selected .radio-custom { border-color: var(--color-primary); }
 .option-card.selected .radio-custom::after {
-    content: ''; position: absolute; top: 3px; left: 3px;
-    width: 8px; height: 8px; background: var(--color-primary); border-radius: 50%;
+    content: ''; 
+    width: 10px; height: 10px; 
+    background: var(--color-primary); 
+    border-radius: 50%;
+    /* Ichkaridagi nuqtani ham markazga olish uchun */
+    position: absolute; 
 }
 
 /* Result Section */
@@ -395,8 +434,10 @@ input:focus, select:focus {
     .hero-subtitle { font-size: 0.85rem; letter-spacing: 1px; }
 
     .timeline-grid { grid-template-columns: 1fr; gap: var(--space-md); }
-    .week-column { padding-left: var(--space-md); margin-left: 5px; }
-    .day-node::before { left: -32px; top: 20px; }
+    /* Mobil uchun chiziq va aylanani o'zgartirish shart emas, padding ishlaydi */
+    .week-column { padding-left: 35px; } /* Mobilda biroz siqish */
+    .week-column::before { left: 16px; }
+    .day-node::before { left: -27px; top: 20px; }
 
     .project-summary { grid-template-columns: 1fr; }
     .test-container { margin: 15px auto; padding: 16px 14px; }
@@ -411,7 +452,7 @@ input:focus, select:focus {
     }
 
     .option-card { padding: 12px 10px; font-size: 0.88rem; }
-    .radio-custom { width: 16px; height: 16px; margin-right: 10px; flex-shrink: 0; margin-top: 3px; }
+    .radio-custom { width: 18px; height: 18px; margin-right: 10px; }
 
     .placement-options { grid-template-columns: 1fr; }
     .form-section { align-items: flex-start; padding-top: 20px; min-height: auto; }
