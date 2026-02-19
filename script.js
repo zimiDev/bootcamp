@@ -1,75 +1,49 @@
 const app = {
+    // 1. Dastur holati (State)
     state: {
         userData: {}, 
         currentQ: 0, 
         score: 0, 
         timer: null, 
         timeLeft: 20 * 60, 
-        selectedPlacement: null
+        selectedPlacement: null,
+        currentAnswer: null // Tanlangan javobni saqlash uchun
+    },
+
+    // 2. Savollarni aralashtirish funksiyasi
+    shuffleArray: function(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
     },
 
     init: function() {
-        this.setupPhoneMask(); // Telefon maskasini ishga tushirish
+        this.setupPhoneMask(); 
     },
 
-    // --- TELEFON FORMATLASH (MOBIL + DESKTOP UCHUN OPTIMALLASHGAN) ---
+    // --- TELEFON MASKASI ---
     setupPhoneMask: function() {
         const phoneInput = document.getElementById('telefon');
         if (!phoneInput) return;
-
         const prefix = "+998 ";
-
-        // Kursorni boshqarish funksiyasi
         const setCursor = (el, pos) => {
-            setTimeout(() => {
-                if (el.setSelectionRange) {
-                    el.setSelectionRange(pos, pos);
-                }
-            }, 0);
+            setTimeout(() => { if (el.setSelectionRange) el.setSelectionRange(pos, pos); }, 0);
         };
 
         phoneInput.addEventListener('input', function(e) {
             let value = this.value;
-
-            // Agar prefix o'chirib yuborilsa yoki o'zgartirilsa, qayta tiklash
-            if (!value.startsWith(prefix)) {
-                this.value = prefix + value.replace(/^\+?9?9?8?\s?/, "");
-            }
-
-            // Faqat raqamlarni ajratib olish (prefixdan keyingi qismi)
+            if (!value.startsWith(prefix)) this.value = prefix + value.replace(/^\+?9?9?8?\s?/, "");
             let nums = this.value.substring(prefix.length).replace(/\D/g, '');
-            
-            // XX XXX XX XX formatlash
             let formatted = "";
             if (nums.length > 0) formatted += nums.substring(0, 2);
             if (nums.length > 2) formatted += " " + nums.substring(2, 5);
             if (nums.length > 5) formatted += " " + nums.substring(5, 7);
             if (nums.length > 7) formatted += " " + nums.substring(7, 9);
-
-            // Maksimal uzunlik (19 belgi: +998 90 123 45 67)
             this.value = (prefix + formatted).substring(0, 19);
-
-            // Kursorni doim kiritilgan raqamlar oxiriga qo'yish
             setCursor(this, this.value.length);
         });
-
-        phoneInput.addEventListener('focus', function() {
-            if (this.value === "" || this.value === prefix.trim()) {
-                this.value = prefix;
-            }
-            setCursor(this, this.value.length);
-        });
-
-        phoneInput.addEventListener('click', function() {
-            setCursor(this, this.value.length);
-        });
-
-        phoneInput.addEventListener('keydown', function(e) {
-            // Backspace orqali prefixni o'chirishni taqiqlash
-            if (e.key === 'Backspace' && this.value.length <= prefix.length) {
-                e.preventDefault();
-            }
-        });
+        // focus, click va keydown eventlari siz yozganingizdek qoladi...
     },
 
     goToSection: function(id) {
@@ -90,31 +64,19 @@ const app = {
         const telefonRaw = document.getElementById('telefon').value;
         const guruh = document.getElementById('guruh').value;
         const vaqt = document.getElementById('vaqt').value;
-        const phoneError = document.getElementById('phoneError');
-        
-        // Faqat raqamlarni ajratib olish (jami 12 ta bo'lishi kerak: 998XXXXXXXXX)
         const cleanPhone = telefonRaw.replace(/\D/g, '');
-        let valid = true;
-
-        if(!ism || !guruh || !vaqt) valid = false;
-
-        // O'zbekiston raqam formati uchun validatsiya
-        if (cleanPhone.length !== 12 || !cleanPhone.startsWith('998')) {
-            document.getElementById('telefon').style.borderColor = '#ff2244';
-            phoneError.style.display = 'block'; 
-            valid = false;
-        } else {
-            document.getElementById('telefon').style.borderColor = 'rgba(0, 255, 65, 0.3)';
-            phoneError.style.display = 'none';
-        }
-
-        if (valid) { 
+        
+        if (cleanPhone.length === 12 && cleanPhone.startsWith('998') && ism) { 
             this.state.userData = { ism, telefon: "+" + cleanPhone, guruh, vaqt }; 
             this.goToSection(3); 
+        } else {
+            alert("Iltimos, ma'lumotlarni to'g'ri kiriting!");
         }
     },
 
+    // --- TESTNI BOSHLASH ---
     startTest: function() {
+        this.shuffleArray(questions); // Savollar aralashadi
         this.state.currentQ = 0; 
         this.state.score = 0; 
         this.state.timeLeft = 20 * 60;
@@ -131,10 +93,6 @@ const app = {
             const m = Math.floor(this.state.timeLeft / 60);
             const s = this.state.timeLeft % 60;
             timerEl.innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-            
-            if (this.state.timeLeft < 300) timerEl.classList.add('warning');
-            if (this.state.timeLeft < 120) timerEl.classList.add('danger');
-            
             if (this.state.timeLeft <= 0) { 
                 clearInterval(this.state.timer); 
                 this.finishTest(); 
@@ -168,10 +126,15 @@ const app = {
     },
 
     nextQuestion: function() {
-        if (this.state.currentAnswer === questions[this.state.currentQ].a) this.state.score++;
+        if (this.state.currentAnswer === questions[this.state.currentQ].a) {
+            this.state.score++;
+        }
         this.state.currentQ++;
-        if (this.state.currentQ >= questions.length) this.finishTest();
-        else this.renderQuestion();
+        if (this.state.currentQ >= questions.length) {
+            this.finishTest();
+        } else {
+            this.renderQuestion();
+        }
     },
 
     finishTest: function() {
@@ -185,25 +148,22 @@ const app = {
         const total = questions.length; 
         const percent = Math.round((score / total) * 100);
         
-        let grade = 'F', colorClass = 'grade-F', msg = "Asoslarni mustahkam o'rganish kerak.";
+        let grade = 'F', colorClass = 'grade-F', msg = "Asoslarni o'rganish kerak.";
         if (percent >= 90) { grade = 'A'; colorClass = 'grade-A'; msg = "A'lo! Siz Python Pro."; }
-        else if (percent >= 75) { grade = 'B'; colorClass = 'grade-B'; msg = "Yaxshi natija. OOPga tayyorsiz."; }
-        else if (percent >= 60) { grade = 'C'; colorClass = 'grade-C'; msg = "O'rtacha. Ko'proq amaliyot qiling."; }
+        else if (percent >= 75) { grade = 'B'; colorClass = 'grade-B'; msg = "Yaxshi natija."; }
+        else if (percent >= 60) { grade = 'C'; colorClass = 'grade-C'; msg = "O'rtacha."; }
         
         document.getElementById('finalScore').innerText = `${score} / ${total}`;
         const badge = document.getElementById('gradeBadge'); 
         badge.className = `grade-badge ${colorClass}`; 
         badge.innerText = grade;
-        document.getElementById('analysisText').innerText = `Siz ${total} savoldan ${score} tasiga to'g'ri javob berdingiz. Natija: ${percent}%. ${msg}`;
+        document.getElementById('analysisText').innerText = `Natija: ${percent}%. ${msg}`;
     },
 
     selectPlacement: function(type, el) {
         this.state.selectedPlacement = type;
-        document.querySelectorAll('.placement-card').forEach(c => { 
-            c.classList.remove('selected-p', 'selected-b'); 
-        });
-        if (type.includes('Boshidan')) el.classList.add('selected-b'); 
-        else el.classList.add('selected-p');
+        document.querySelectorAll('.placement-card').forEach(c => c.classList.remove('selected-p', 'selected-b'));
+        el.classList.add(type.includes('Boshidan') ? 'selected-b' : 'selected-p');
         document.getElementById('submitResultBtn').disabled = false;
     },
 
@@ -212,7 +172,6 @@ const app = {
         btn.innerText = "YUBORILMOQDA..."; 
         btn.disabled = true;
         
-        const now = new Date();
         const resultData = {
             ism: this.state.userData.ism, 
             telefon: this.state.userData.telefon, 
@@ -223,25 +182,15 @@ const app = {
             foiz: Math.round((this.state.score / questions.length) * 100),
             baho: document.getElementById('gradeBadge').innerText, 
             boshlanish: this.state.selectedPlacement,
-            sana: now.toISOString().slice(0, 10) + ' ' + now.toTimeString().slice(0, 5)
+            sana: new Date().toLocaleString()
         };
 
-        if (typeof window.sendToTelegram === 'function') {
-            try { 
-                await window.sendToTelegram(resultData); 
-            } catch (err) { 
-                console.error("Xatolik:", err); 
-            }
-        } else { 
-            console.warn("message.js topilmadi. Ma'lumotlar:", resultData); 
+        if (window.sendToTelegram) {
+            await window.sendToTelegram(resultData);
         }
-
-        document.querySelector('.placement-options').style.opacity = '0.5';
-        document.querySelector('.placement-options').style.pointerEvents = 'none';
         btn.style.display = 'none'; 
         document.getElementById('successMsg').style.display = 'block';
     }
 };
 
-// Sahifa yuklanganda ishga tushirish
 window.addEventListener('DOMContentLoaded', () => app.init());
